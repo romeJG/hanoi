@@ -17,7 +17,6 @@
             margin-top: 20px;
         }
         .tower {
-            width: 150px;
             height: 250px;
             border: 2px solid black;
             display: flex;
@@ -70,6 +69,8 @@
             numDisks = parseInt(document.getElementById("diskCount").value, 10);
             moveCount = 0;
             moveCounterDisplay.innerText = moveCount;
+            let maxWidth = numDisks * 30;
+            towers.forEach(tower => tower.style.width = `${maxWidth + 20}px`);
             for (let i = numDisks; i > 0; i--) {
                 const disk = document.createElement("div");
                 disk.classList.add("disk");
@@ -143,4 +144,3 @@
     </script>
 </body>
 </html>
-
