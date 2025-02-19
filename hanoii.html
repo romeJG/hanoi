@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tower of Hanoi</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+        .tower-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            height: 300px;
+            margin-top: 20px;
+        }
+        .tower {
+            width: 150px;
+            height: 250px;
+            border: 2px solid black;
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+            position: relative;
+            margin: 0 20px;
+        }
+        .disk {
+            position: absolute;
+            height: 20px;
+            background-color: steelblue;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            transition: transform 0.5s ease-in-out, bottom 0.5s ease-in-out;
+        }
+        button, input {
+            margin-top: 20px;
+            padding: 10px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Tower of Hanoi</h1>
+    <input type="number" id="diskCount" min="1" max="10" value="0">
+    <button id="controlButton" onclick="toggleHanoi()">Start</button>
+    <p>Moves: <span id="moveCounter">0</span></p>
+    <div class="tower-container">
+        <div class="tower" id="tower1"></div>
+        <div class="tower" id="tower2"></div>
+        <div class="tower" id="tower3"></div>
+    </div>
+    <script>
+        let numDisks = 0;
+        let isRunning = false;
+        let pauseRequested = false;
+        let moveStack = [];
+        let moveCount = 0;
+        const moveCounterDisplay = document.getElementById("moveCounter");
+        const towers = [
+            document.getElementById("tower1"),
+            document.getElementById("tower2"),
+            document.getElementById("tower3")
+        ];
+        
+        function createDisks() {
+            towers.forEach(tower => tower.innerHTML = "");
+            numDisks = parseInt(document.getElementById("diskCount").value, 10);
+            moveCount = 0;
+            moveCounterDisplay.innerText = moveCount;
+            for (let i = numDisks; i > 0; i--) {
+                const disk = document.createElement("div");
+                disk.classList.add("disk");
+                disk.style.width = `${i * 30}px`;
+                disk.dataset.size = i;
+                disk.innerText = i;
+                disk.style.bottom = `${(numDisks - i) * 25}px`;
+                towers[0].appendChild(disk);
+            }
+            moveStack = [];
+            generateMoves(numDisks, 0, 2, 1);
+        }
+        
+        function generateMoves(n, from, to, aux) {
+            if (n > 0) {
+                generateMoves(n - 1, from, aux, to);
+                moveStack.push([from, to]);
+                generateMoves(n - 1, aux, to, from);
+            }
+        }
+        
+        async function moveDisk(from, to) {
+            return new Promise(resolve => {
+                const disk = towers[from].lastElementChild;
+                const targetTower = towers[to];
+                const newBottom = targetTower.childElementCount * 25;
+                
+                disk.style.transform = `translate(0, -100px)`;
+                setTimeout(() => {
+                    disk.style.transform = `translate(${(to - from) * 170}px, -100px)`;
+                    setTimeout(() => {
+                        targetTower.appendChild(disk);
+                        disk.style.transform = `translate(0, 0)`;
+                        disk.style.bottom = `${newBottom}px`;
+                        moveCount++;
+                        moveCounterDisplay.innerText = moveCount;
+                        resolve();
+                    }, 500);
+                }, 500);
+            });
+        }
+        
+        async function runMoves() {
+            while (moveStack.length > 0 && !pauseRequested) {
+                const [from, to] = moveStack.shift();
+                await moveDisk(from, to);
+            }
+            if (moveStack.length === 0) {
+                isRunning = false;
+                document.getElementById("controlButton").innerText = "Start";
+            }
+        }
+        
+        function toggleHanoi() {
+            if (isRunning) {
+                pauseRequested = true;
+                isRunning = false;
+                document.getElementById("controlButton").innerText = "Resume";
+            } else {
+                pauseRequested = false;
+                isRunning = true;
+                document.getElementById("controlButton").innerText = "Pause";
+                if (moveStack.length === 0) {
+                    createDisks();
+                }
+                runMoves();
+            }
+        }
+        
+        createDisks();
+    </script>
+</body>
+</html>
+
