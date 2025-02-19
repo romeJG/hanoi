@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,6 +10,7 @@
             text-align: center;
             font-family: Arial, sans-serif;
         }
+
         .tower-container {
             display: flex;
             justify-content: center;
@@ -16,6 +18,7 @@
             height: 300px;
             margin-top: 20px;
         }
+
         .tower {
             height: 250px;
             border: 2px solid black;
@@ -25,6 +28,7 @@
             position: relative;
             margin: 0 20px;
         }
+
         .disk {
             position: absolute;
             height: 20px;
@@ -34,18 +38,22 @@
             font-weight: bold;
             transition: transform 0.5s ease-in-out, bottom 0.5s ease-in-out;
         }
-        button, input {
+
+        button,
+        input {
             margin-top: 20px;
             padding: 10px;
             font-size: 16px;
         }
     </style>
 </head>
+
 <body>
     <h1>Tower of Hanoi</h1>
     <input type="number" id="diskCount" min="1" max="10" value="0">
     <button id="controlButton" onclick="toggleHanoi()">Start</button>
     <p>Moves: <span id="moveCounter">0</span></p>
+    <p>Time: <span id="timer">0</span> minutes <span id="seconds">0</span> seconds</p>
     <div class="tower-container">
         <div class="tower" id="tower1"></div>
         <div class="tower" id="tower2"></div>
@@ -57,18 +65,26 @@
         let pauseRequested = false;
         let moveStack = [];
         let moveCount = 0;
+        let timer = 0;
+        let timerInterval;
         const moveCounterDisplay = document.getElementById("moveCounter");
+        const timerDisplay = document.getElementById("timer");
+        const secondsDisplay = document.getElementById("seconds");
         const towers = [
             document.getElementById("tower1"),
             document.getElementById("tower2"),
             document.getElementById("tower3")
         ];
-        
+
         function createDisks() {
             towers.forEach(tower => tower.innerHTML = "");
             numDisks = parseInt(document.getElementById("diskCount").value, 10);
             moveCount = 0;
+            timer = 0;
             moveCounterDisplay.innerText = moveCount;
+            timerDisplay.innerText = 0;
+            secondsDisplay.innerText = 0;
+            clearInterval(timerInterval);
             let maxWidth = numDisks * 30;
             towers.forEach(tower => tower.style.width = `${maxWidth + 20}px`);
             for (let i = numDisks; i > 0; i--) {
@@ -83,7 +99,7 @@
             moveStack = [];
             generateMoves(numDisks, 0, 2, 1);
         }
-        
+
         function generateMoves(n, from, to, aux) {
             if (n > 0) {
                 generateMoves(n - 1, from, aux, to);
@@ -91,13 +107,13 @@
                 generateMoves(n - 1, aux, to, from);
             }
         }
-        
+
         async function moveDisk(from, to) {
             return new Promise(resolve => {
                 const disk = towers[from].lastElementChild;
                 const targetTower = towers[to];
                 const newBottom = targetTower.childElementCount * 25;
-                
+
                 disk.style.transform = `translate(0, -100px)`;
                 setTimeout(() => {
                     disk.style.transform = `translate(${(to - from) * 170}px, -100px)`;
@@ -112,22 +128,30 @@
                 }, 500);
             });
         }
-        
+
         async function runMoves() {
+            timerInterval = setInterval(() => {
+                timer++;
+                timerDisplay.innerText = Math.floor(timer / 60);
+                secondsDisplay.innerText = timer % 60;
+            }, 1000);
+
             while (moveStack.length > 0 && !pauseRequested) {
                 const [from, to] = moveStack.shift();
                 await moveDisk(from, to);
             }
+            clearInterval(timerInterval);
             if (moveStack.length === 0) {
                 isRunning = false;
                 document.getElementById("controlButton").innerText = "Start";
             }
         }
-        
+
         function toggleHanoi() {
             if (isRunning) {
                 pauseRequested = true;
                 isRunning = false;
+                clearInterval(timerInterval);
                 document.getElementById("controlButton").innerText = "Resume";
             } else {
                 pauseRequested = false;
@@ -139,8 +163,9 @@
                 runMoves();
             }
         }
-        
+
         createDisks();
     </script>
 </body>
+
 </html>
